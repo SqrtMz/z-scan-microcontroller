@@ -4,6 +4,10 @@
 #include <Wire.h>
 #include "fns.h"
 
+// Motor distance per rev: 5 mm
+// Motor distance per step (200): 5 mm / 200 = 0.025 mm
+// Motor distance per step (6400): 5 mm / 6400 = 0.00078125 mm
+
 int ena_pin = 25;
 int dir_pin = 26;
 int pul_pin = 27;
@@ -14,7 +18,7 @@ int lim_switch_end_pin = 35;
 int photo_diode_pin = 33;
 float photo_diode_value = 0.0;
 
-float max_motor_speed = 750; // Maximum speed of the motor in steps per second
+float max_motor_speed = 25600; // Maximum speed of the motor in steps per second
 
 char incoming_data[100];
 String commands[10];
@@ -23,6 +27,7 @@ Adafruit_ADS1115 ads;
 AccelStepper stepper(AccelStepper::DRIVER, pul_pin, dir_pin);
 
 bool is_moving = false;
+
 float move_from, move_to, motor_speed, measure_separation, stabilization_time;
 
 void print_data() {
@@ -36,30 +41,28 @@ void print_data() {
 void go_to_start() {
 
 	while (!digitalRead(lim_switch_start_pin)) {
-		stepper.move(-1);
 		stepper.setSpeed(-max_motor_speed);
-		stepper.runSpeed();
+		stepper.move(-1);
+		stepper.run();
 	}
 
-	stepper.setSpeed(0);
-	stepper.runSpeed();
+	stepper.stop();
 	stepper.setCurrentPosition(0);
+	stepper.setSpeed(motor_speed);
 }
 
 void go_to_end() {
 
 	while (!digitalRead(lim_switch_end_pin)) {
 		stepper.setSpeed(max_motor_speed);
-		stepper.runSpeed();
+		stepper.run();
 	}
 
-	stepper.setSpeed(0);
-	stepper.runSpeed();
+	stepper.stop();
 }
 
 void stop() {
-	stepper.setSpeed(0);
-	stepper.runSpeed();
+	stepper.stop();
 }
 
 void setup() {
@@ -76,7 +79,7 @@ void setup() {
 	pinMode(lim_switch_start_pin, INPUT_PULLDOWN);
 	pinMode(lim_switch_end_pin, INPUT_PULLDOWN);
 
-	stepper.setMaxSpeed(1000);
+	stepper.setMaxSpeed(max_motor_speed);
 
 	ads.begin();
 	ads.setGain(GAIN_EIGHT);
@@ -85,9 +88,6 @@ void setup() {
 }
 
 void loop() {
-	
-	stepper.setSpeed(0);
-	stepper.runSpeed();
 
 	if (Serial.available()) {
 		read_incoming_data(incoming_data, commands);
@@ -101,11 +101,19 @@ void loop() {
 		Serial.println();
 	}
 
-	if (commands[0] == "execute") { is_moving = true; /*go_to_start();*/ }
+	if (commands[0] == "execute") {
+
+		if (stepper.currentPosition() != 0)
+		{
+			go_to_start();
+		}
+
+		is_moving = true;
+	}
+	
 
 	else if (commands[0] == "stop") {
-		stepper.setSpeed(0);
-		stepper.runSpeed();
+		stepper.stop();
 		is_moving = false;
 		
 		Serial.println("Stopped");
@@ -122,7 +130,7 @@ void loop() {
 		}
 	}
 
-	if (is_moving && !digitalRead(lim_switch_start_pin) && !digitalRead(lim_switch_end_pin)) {
+	if (is_moving) {
 
 		if (commands[0] == "execute") {
 			move_from = commands[1].toFloat();
@@ -131,31 +139,30 @@ void loop() {
 			measure_separation = commands[4].toFloat();
 			stabilization_time = commands[5].toFloat();
 		}
-
+		
 		stepper.moveTo(move_from);
 		stepper.setSpeed(motor_speed);
-		stepper.runSpeed();
+		stepper.run();
 
 		if (stepper.currentPosition() == move_from) {
 			delay(stabilization_time);
 			move_from = stepper.currentPosition() + measure_separation;
 			
-			photo_diode_value = ads.readADC_Differential_0_1();
-			photo_diode_value = ads.computeVolts(photo_diode_value);
+			// photo_diode_value = ads.readADC_Differential_0_1();
+			// photo_diode_value = ads.computeVolts(photo_diode_value);
+			photo_diode_value = analogRead(photo_diode_pin);
 			print_data();
 		}
+	}
 
-		if (stepper.currentPosition() >= move_to || digitalRead(lim_switch_start_pin) || digitalRead(lim_switch_end_pin)) {
+	if (stepper.currentPosition() >= move_to || digitalRead(lim_switch_start_pin) || digitalRead(lim_switch_end_pin)) {
 
-			stepper.setSpeed(0);
-			stepper.runSpeed();
-			delay(stabilization_time);
-			is_moving = false;
-			
-		}
+		stepper.stop();
+		delay(stabilization_time);
+		is_moving = false;
 
 	}
 
-	incoming_data[0] = '\0';
+	memset(incoming_data, '\0', sizeof(incoming_data));
 	memset(commands, '\0', sizeof(commands));
 }
