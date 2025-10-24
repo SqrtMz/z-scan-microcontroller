@@ -19,6 +19,8 @@ int photo_diode_pin = 33;
 float photo_diode_value = 0.0;
 
 float max_motor_speed = 25600; // Maximum speed of the motor in steps per second
+// float max_motor_speed = 12800; // Maximum speed of the motor in steps per second
+// float max_motor_speed = 6400; // Maximum speed of the motor in steps per second
 
 char incoming_data[100];
 String commands[10];
@@ -122,20 +124,13 @@ void loop() {
 	else if (commands[0] == "go_to_start") {go_to_start();}
 	else if (commands[0] == "go_to_end") {go_to_end();}
 	else if (commands[0] == "stop") {stop();}
-	else if (commands[0] == "reset_plot") {
-
-		for (size_t i = 0; i < 100; i++)
-		{
-			Serial.println("resetting...");
-		}
-	}
 
 	if (is_moving) {
 
 		if (commands[0] == "execute") {
 			move_from = commands[1].toFloat();
 			move_to = commands[2].toFloat();
-			motor_speed = ((commands[3].toFloat() + 1) * 0.01) * max_motor_speed; 
+			motor_speed = ((commands[3].toFloat()) * 0.01) * max_motor_speed;
 			measure_separation = commands[4].toFloat();
 			stabilization_time = commands[5].toFloat();
 		}
