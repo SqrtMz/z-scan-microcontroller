@@ -18,9 +18,7 @@ int lim_switch_end_pin = 35;
 int photo_diode_pin = 33;
 float photo_diode_value = 0.0;
 
-float max_motor_speed = 25600; // Maximum speed of the motor in steps per second
-// float max_motor_speed = 12800; // Maximum speed of the motor in steps per second
-// float max_motor_speed = 6400; // Maximum speed of the motor in steps per second
+float max_motor_speed = 25600;
 
 char incoming_data[100];
 String commands[10];
@@ -42,7 +40,7 @@ void print_data() {
 
 void go_to_start() {
 
-	while (!digitalRead(lim_switch_start_pin)) {
+	while (!digitalRead(lim_switch_start_pin) || !digitalRead(lim_switch_end_pin)) {
 		stepper.setSpeed(-max_motor_speed);
 		stepper.move(-1);
 		stepper.run();
@@ -55,7 +53,7 @@ void go_to_start() {
 
 void go_to_end() {
 
-	while (!digitalRead(lim_switch_end_pin)) {
+	while (!digitalRead(lim_switch_start_pin) || !digitalRead(lim_switch_end_pin)) {
 		stepper.setSpeed(max_motor_speed);
 		stepper.run();
 	}
@@ -151,11 +149,9 @@ void loop() {
 	}
 
 	if (stepper.currentPosition() >= move_to || digitalRead(lim_switch_start_pin) || digitalRead(lim_switch_end_pin)) {
-
 		stepper.stop();
 		delay(stabilization_time);
 		is_moving = false;
-
 	}
 
 	memset(incoming_data, '\0', sizeof(incoming_data));
