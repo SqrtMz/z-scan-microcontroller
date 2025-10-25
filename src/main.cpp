@@ -4,10 +4,6 @@
 #include <Wire.h>
 #include "fns.h"
 
-// Motor distance per rev: 5 mm
-// Motor distance per step (200): 5 mm / 200 = 0.025 mm
-// Motor distance per step (6400): 5 mm / 6400 = 0.00078125 mm
-
 int ena_pin = 25;
 int dir_pin = 26;
 int pul_pin = 27;
@@ -40,7 +36,7 @@ void print_data() {
 
 void go_to_start() {
 
-	while (!digitalRead(lim_switch_start_pin) || !digitalRead(lim_switch_end_pin)) {
+	while (!digitalRead(lim_switch_start_pin)) {
 		stepper.setSpeed(-max_motor_speed);
 		stepper.move(-1);
 		stepper.run();
@@ -53,7 +49,7 @@ void go_to_start() {
 
 void go_to_end() {
 
-	while (!digitalRead(lim_switch_start_pin) || !digitalRead(lim_switch_end_pin)) {
+	while (!digitalRead(lim_switch_end_pin)) {
 		stepper.setSpeed(max_motor_speed);
 		stepper.run();
 	}
