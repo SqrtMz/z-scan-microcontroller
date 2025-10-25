@@ -98,15 +98,9 @@ void loop() {
 	}
 
 	if (commands[0] == "execute") {
-
-		if (stepper.currentPosition() != 0)
-		{
-			go_to_start();
-		}
-
+		if (stepper.currentPosition() != 0) { go_to_start(); }
 		is_moving = true;
 	}
-	
 
 	else if (commands[0] == "stop") {
 		stepper.stop();
@@ -120,7 +114,6 @@ void loop() {
 	else if (commands[0] == "stop") {stop();}
 
 	if (is_moving) {
-
 		if (commands[0] == "execute") {
 			move_from = commands[1].toFloat();
 			move_to = commands[2].toFloat();
@@ -142,12 +135,12 @@ void loop() {
 			photo_diode_value = analogRead(photo_diode_pin);
 			print_data();
 		}
-	}
 
-	if (stepper.currentPosition() >= move_to || digitalRead(lim_switch_start_pin) || digitalRead(lim_switch_end_pin)) {
-		stepper.stop();
-		delay(stabilization_time);
-		is_moving = false;
+		if (stepper.currentPosition() >= move_to || digitalRead(lim_switch_start_pin) || digitalRead(lim_switch_end_pin)) {
+			stepper.stop();
+			delay(stabilization_time);
+			is_moving = false;
+		}
 	}
 
 	memset(incoming_data, '\0', sizeof(incoming_data));
