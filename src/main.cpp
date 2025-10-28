@@ -76,6 +76,7 @@ void setup() {
 	pinMode(lim_switch_end_pin, INPUT_PULLDOWN);
 
 	stepper.setMaxSpeed(max_motor_speed);
+	stepper.setAcceleration(10000.0);
 
 	ads.begin();
 	ads.setGain(GAIN_EIGHT);
@@ -100,6 +101,12 @@ void loop() {
 	if (commands[0] == "execute") {
 		if (stepper.currentPosition() != 0) { go_to_start(); }
 		is_moving = true;
+
+		move_from = commands[1].toFloat();
+		move_to = commands[2].toFloat();
+		motor_speed = ((commands[3].toFloat()) * 0.01) * max_motor_speed;
+		measure_separation = commands[4].toFloat();
+		stabilization_time = commands[5].toFloat();
 	}
 
 	else if (commands[0] == "stop") {
@@ -114,16 +121,8 @@ void loop() {
 	else if (commands[0] == "stop") {stop();}
 
 	if (is_moving) {
-		if (commands[0] == "execute") {
-			move_from = commands[1].toFloat();
-			move_to = commands[2].toFloat();
-			motor_speed = ((commands[3].toFloat()) * 0.01) * max_motor_speed;
-			measure_separation = commands[4].toFloat();
-			stabilization_time = commands[5].toFloat();
-		}
 		
 		stepper.moveTo(move_from);
-		stepper.setSpeed(motor_speed);
 		stepper.run();
 
 		if (stepper.currentPosition() == move_from) {
