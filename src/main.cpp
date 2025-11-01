@@ -110,7 +110,7 @@ void loop() {
 		motor_speed = ((commands[3].toFloat()) * 0.01) * max_motor_speed;
 		measure_separation = commands[4].toFloat();
 		stabilization_time = commands[5].toFloat();
-		// is_accelerated = commands[6].toInt();
+		is_accelerated = (bool)commands[6].toInt();
 	}
 
 	else if (commands[0] == "stop") {
