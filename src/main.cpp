@@ -26,42 +26,8 @@ AccelStepper stepper(AccelStepper::DRIVER, pul_pin, dir_pin);
 bool is_moving = false;
 bool is_accelerated = true;
 
-float move_from, move_to, motor_speed, measure_separation, stabilization_time;
-
-void print_data() {
-
-	Serial.print(photo_diode_value);
-	Serial.print(',');
-	Serial.println(stepper.currentPosition());
-
-}
-
-void go_to_start() {
-
-	while (!digitalRead(lim_switch_start_pin)) {
-		stepper.setSpeed(-max_motor_speed);
-		stepper.move(-1);
-		stepper.run();
-	}
-
-	stepper.stop();
-	stepper.setCurrentPosition(0);
-	stepper.setSpeed(motor_speed);
-}
-
-void go_to_end() {
-
-	while (!digitalRead(lim_switch_end_pin)) {
-		stepper.setSpeed(max_motor_speed);
-		stepper.run();
-	}
-
-	stepper.stop();
-}
-
-void stop() {
-	stepper.stop();
-}
+float move_from, move_to, measure_separation, stabilization_time;
+float motor_speed = max_motor_speed;
 
 void setup() {
 
@@ -102,7 +68,7 @@ void loop() {
 	}
 
 	if (commands[0] == "execute") {
-		if (stepper.currentPosition() != 0) { go_to_start(); delay(500);}
+		if (stepper.currentPosition() != 0) { go_to_start(lim_switch_start_pin, max_motor_speed, stepper); delay(1000);}
 		is_moving = true;
 
 		move_from = commands[1].toFloat();
@@ -120,14 +86,14 @@ void loop() {
 		Serial.println("Stopped");
 	}
 
-	else if (commands[0] == "go_to_start") {go_to_start();}
-	else if (commands[0] == "go_to_end") {go_to_end();}
-	else if (commands[0] == "stop") {stop();}
-	
+	else if (commands[0] == "go_to_start") {go_to_start(lim_switch_start_pin, max_motor_speed, stepper);}
+	else if (commands[0] == "go_to_end") {go_to_end(lim_switch_end_pin, max_motor_speed, stepper);}
+	else if (commands[0] == "stop") {stepper.stop();}
+
 	if (is_moving) {
 		
 		stepper.moveTo(move_from);
-		if (!is_accelerated) {stepper.setSpeed(motor_speed);}
+		if (!is_accelerated && stepper.currentPosition() != 0) {stepper.setSpeed(motor_speed);}
 		stepper.run();
 
 		if (stepper.currentPosition() == move_from) {
@@ -137,7 +103,7 @@ void loop() {
 			// photo_diode_value = ads.readADC_Differential_0_1();
 			// photo_diode_value = ads.computeVolts(photo_diode_value);
 			photo_diode_value = analogRead(photo_diode_pin);
-			print_data();
+			print_data(photo_diode_value, stepper);
 		}
 	}
 
