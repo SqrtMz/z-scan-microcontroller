@@ -10,6 +10,8 @@ int LS_START_PIN = 32;	// Limit switch start pin
 int LS_END_PIN = 35;	// Limit switch end pin
 int PD_PIN = 33;		// Photodiode pin
 
+adsGain_t ADC_GAIN_OPTION[6] = {GAIN_TWOTHIRDS, GAIN_ONE, GAIN_TWO, GAIN_FOUR, GAIN_EIGHT, GAIN_SIXTEEN};
+
 void read_incoming_data(char *incoming_data, String *commands) {
 
 	int i = 0;
@@ -37,8 +39,10 @@ void read_incoming_data(char *incoming_data, String *commands) {
 	}
 }
 
-void print_data(float photo_diode_value, AccelStepper& stepper) {
-	Serial.print(photo_diode_value);
+void print_data(float photo_diode_value1, float photo_diode_value2, AccelStepper& stepper) {
+	Serial.print(photo_diode_value1);
+	Serial.print(',');
+	Serial.print(photo_diode_value2);
 	Serial.print(',');
 	Serial.println(stepper.currentPosition());
 }
