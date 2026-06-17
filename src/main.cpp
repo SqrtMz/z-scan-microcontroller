@@ -29,7 +29,6 @@ adsGain_t adc_gain;
 void setup() {
 
 	Serial.begin(115200);
-	pinMode(PD_PIN, INPUT);
 
 	pinMode(DIR_PIN, OUTPUT);
 	pinMode(PUL_PIN, OUTPUT);
@@ -52,9 +51,9 @@ void setup() {
 	// GAIN_SIXTEEN 	±0.256 V
 
 	if (!adc.begin()) {Serial.println("ADC couldn't be initialized");}
-	// adc.setGain(GAIN_TWOTHIRDS);
+	adc.setGain(GAIN_TWOTHIRDS);
 
-	if (!DEBUG) go_to_start(LS_START_PIN, MAX_MOTOR_SPEED, stepper);
+	// if (!DEBUG) go_to_start(LS_START_PIN, MAX_MOTOR_SPEED, stepper);
 }
 
 void loop() {
@@ -73,7 +72,7 @@ void loop() {
 		is_accelerated = (bool)commands[6].toInt();									// Receives an int[0, 1]
 		adc_gain = ADC_GAIN_OPTION[commands[7].toInt()];							// Receives an index for ADC_GAIN_OPTIONS[]
 
-		// adc.setGain(adc_gain);
+		adc.setGain(adc_gain);
 	}
 
 	else if (commands[0] == "stop") {
@@ -97,11 +96,8 @@ void loop() {
 			
 			if (stabilization_time != 0) {delay(stabilization_time);}
 
-			// pd_value = adc.readADC_Differential_1_3();
-			// pd2_value = adc.readADC_Differential_2_3();
-
-			pd_value = 10000;
-			pd2_value = analogRead(25);
+			pd_value = adc.readADC_Differential_1_3();
+			pd2_value = adc.readADC_Differential_2_3();
 
 			// float pd_value = 0.0;
 			// for (size_t i = 0; i < 10; i++) {pd_value += adc.readADC_Differential_1_3();}
@@ -125,7 +121,7 @@ void loop() {
 			// Serial.print("A3: ");
 			// Serial.println(adc.computeVolts(adc.readADC_SingleEnded(3)));
 			
-			// Serial.println(adc_gain);
+			// Serial.println(digitalRead(LS_START_PIN));
 			// Serial.println("===========================");
 
 			move_from = stepper.currentPosition() + measure_separation;

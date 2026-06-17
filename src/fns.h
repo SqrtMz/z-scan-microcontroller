@@ -1,14 +1,13 @@
 #include <Arduino.h>
 
-bool DEBUG = true;		// Changes the behaviour whether using the setup or just software debugging is needed
+bool DEBUG = false;		// Changes the behaviour whether using the setup or just software debugging is needed
 
-int ENA_PIN = 25;		// Enable pin
-int DIR_PIN = 26;		// Direction pin
-int PUL_PIN = 27;		// Pulse pin
+int ENA_PIN = 16;		// Enable pin
+int DIR_PIN = 17;		// Direction pin
+int PUL_PIN = 5;		// Pulse pin
 
-int LS_START_PIN = 32;	// Limit switch start pin
-int LS_END_PIN = 35;	// Limit switch end pin
-int PD_PIN = 33;		// Photodiode pin
+int LS_START_PIN = 18;	// Limit switch start pin
+int LS_END_PIN = 19;	// Limit switch end pin
 
 adsGain_t ADC_GAIN_OPTION[6] = {GAIN_TWOTHIRDS, GAIN_ONE, GAIN_TWO, GAIN_FOUR, GAIN_EIGHT, GAIN_SIXTEEN};
 
