@@ -2,6 +2,7 @@
 #include <AccelStepper.h>
 #include <Adafruit_ADS1X15.h>
 #include <Wire.h>
+
 #include "fns.h"
 
 float pd_value = 0.0; // Photodiode value
@@ -53,7 +54,7 @@ void setup() {
 	if (!adc.begin()) {Serial.println("ADC couldn't be initialized");}
 	adc.setGain(GAIN_TWOTHIRDS);
 
-	// if (!DEBUG) go_to_start(LS_START_PIN, MAX_MOTOR_SPEED, stepper);
+	if (!DEBUG) go_to_start(LS_START_PIN, MAX_MOTOR_SPEED, stepper);
 }
 
 void loop() {
@@ -82,47 +83,38 @@ void loop() {
 		Serial.println("Stopped");
 	}
 
-	else if (commands[0] == "go_to_start") {go_to_start(LS_START_PIN, MAX_MOTOR_SPEED, stepper);}
-	else if (commands[0] == "go_to_end") {go_to_end(LS_END_PIN, MAX_MOTOR_SPEED, stepper);}
-	else if (commands[0] == "stop") {stepper.stop();}
+	else if (commands[0] == "go_to_start") go_to_start(LS_START_PIN, MAX_MOTOR_SPEED, stepper);
+	else if (commands[0] == "go_to_end") go_to_end(LS_END_PIN, MAX_MOTOR_SPEED, stepper);
+	else if (commands[0] == "stop") stepper.stop();
 
 	if (is_moving) {
 
 		stepper.moveTo(move_from);
-		if (!is_accelerated && stepper.currentPosition() != 0) {stepper.setSpeed(motor_speed);}
+		if (!is_accelerated && stepper.currentPosition() != 0) stepper.setSpeed(motor_speed);
 		stepper.run();
 
 		if (stepper.currentPosition() == move_from) {
 			
-			if (stabilization_time != 0) {delay(stabilization_time);}
+			if (stabilization_time != 0) delay(stabilization_time);
 
-			pd_value = adc.readADC_Differential_1_3();
-			pd2_value = adc.readADC_Differential_2_3();
+			if (!DEBUG) {
+				if (AVERAGE_ITEMS > 1) {
+					pd_value = 0.0;
+					pd2_value = 0.0;
 
-			// float pd_value = 0.0;
-			// for (size_t i = 0; i < 10; i++) {pd_value += adc.readADC_Differential_1_3();}
-			// pd_value /= 10;
+					for (size_t i = 0; i < AVERAGE_ITEMS; i++) {
+						pd_value += adc.readADC_Differential_1_3();
+						pd2_value += adc.readADC_Differential_2_3();
+					}
 
-			print_data(pd_value, pd2_value, stepper);
+					pd_value /= AVERAGE_ITEMS;
+					pd2_value /= AVERAGE_ITEMS;
+				}
 
-			// Serial.print("DIFF 1 - 3: ");
-			// Serial.println(adc.computeVolts(pd_value));
-			
-			// Serial.print("DIFF 2 - 3: ");
-			// Serial.println(adc.computeVolts(pd2_value));
-			
-			// Serial.print("A1: ");
-			// Serial.println(adc.computeVolts(adc.readADC_SingleEnded(1)));
-			
-			
-			// Serial.print("A2: ");
-			// Serial.println(adc.computeVolts(adc.readADC_SingleEnded(1)));
-			
-			// Serial.print("A3: ");
-			// Serial.println(adc.computeVolts(adc.readADC_SingleEnded(3)));
-			
-			// Serial.println(digitalRead(LS_START_PIN));
-			// Serial.println("===========================");
+				print_data(pd_value, pd2_value, stepper);
+
+			} else if (ADC_DEBUG) print_adc_debug(adc);
+			else print_data(10000, 25000, stepper);
 
 			move_from = stepper.currentPosition() + measure_separation;
 		}
