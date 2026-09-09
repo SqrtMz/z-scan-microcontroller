@@ -8,15 +8,6 @@
 float pd_value = 0.0; // Photodiode value
 float pd2_value = 0.0; // Photodiode value
 
-float MAX_MOTOR_SPEED = 31000; // 32 - 6400
-// float MAX_MOTOR_SPEED = 14500; // 16 - 3200
-// float MAX_MOTOR_SPEED = 7500; // 8 - 1600
-
-// float MAX_MOTOR_SPEED = 4500; // 4 - 800
-// float MAX_MOTOR_SPEED = 1850; // 2 - 400
-
-// float MAX_MOTOR_SPEED[5] = {1850, 4500, 7500, 14500, 31000};
-
 char incoming_data[100];
 String commands[10];
 
@@ -98,18 +89,17 @@ void loop() {
 			if (stabilization_time != 0) delay(stabilization_time);
 
 			if (!DEBUG) {
-				if (AVERAGE_ITEMS > 1) {
-					pd_value = 0.0;
-					pd2_value = 0.0;
 
-					for (size_t i = 0; i < AVERAGE_ITEMS; i++) {
-						pd_value += adc.readADC_Differential_1_3();
-						pd2_value += adc.readADC_Differential_2_3();
-					}
+				pd_value = 0.0;
+				pd2_value = 0.0;
 
-					pd_value /= AVERAGE_ITEMS;
-					pd2_value /= AVERAGE_ITEMS;
+				for (size_t i = 0; i < AVERAGE_ITEMS; i++) {
+					pd_value += adc.readADC_Differential_1_3();
+					pd2_value += adc.readADC_Differential_2_3();
 				}
+
+				pd_value /= AVERAGE_ITEMS;
+				pd2_value /= AVERAGE_ITEMS;
 
 				print_data(pd_value, pd2_value, stepper);
 

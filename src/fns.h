@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <Adafruit_ADS1X15.h>
 
-bool DEBUG = true;				// Changes the behaviour whether using the setup or just software debugging is needed
+bool DEBUG = false;				// Changes the behaviour whether using the setup or just software debugging is needed
 bool ADC_DEBUG = false;			// Enable printing information about the ADC pins
 
 int ENA_PIN = 16;				// Enable pin
@@ -16,6 +16,15 @@ int LS_END_PIN = 19;			// Limit switch end pin
 int AVERAGE_ITEMS = 1;			// Number of samples for average measurement of photodiodes
 
 adsGain_t ADC_GAIN_OPTION[6] = {GAIN_TWOTHIRDS, GAIN_ONE, GAIN_TWO, GAIN_FOUR, GAIN_EIGHT, GAIN_SIXTEEN};
+
+float MAX_MOTOR_SPEED = 31000; 		// 32 - 6400
+// float MAX_MOTOR_SPEED = 14500; 	// 16 - 3200
+// float MAX_MOTOR_SPEED = 7500; 	// 8 - 1600
+
+// float MAX_MOTOR_SPEED = 4500; 	// 4 - 800
+// float MAX_MOTOR_SPEED = 1850; 	// 2 - 400
+
+// float MAX_MOTOR_SPEED[5] = {1850, 4500, 7500, 14500, 31000};
 
 void read_incoming_data(char *incoming_data, String *commands) {
 
@@ -31,9 +40,8 @@ void read_incoming_data(char *incoming_data, String *commands) {
 	while (true) {
 		char c = incoming_data[j];
 
-		if (c == '\0') {
-			break;
-		} else if (c == ',') {
+		if (c == '\0') break;
+		else if (c == ',') {
 			i++;
 			j++;
 		} else {
