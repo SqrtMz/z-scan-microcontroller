@@ -35,13 +35,6 @@ void setup() {
 	stepper.setAcceleration(MAX_MOTOR_SPEED);
 	stepper.setSpeed(motor_speed);
 
-	// GAIN_TWOTHIRDS 	±6.144 V
-	// GAIN_ONE 		±4.096 V
-	// GAIN_TWO 		±2.048 V
-	// GAIN_FOUR 		±1.024 V
-	// GAIN_EIGHT 		±0.512 V
-	// GAIN_SIXTEEN 	±0.256 V
-
 	if (!adc.begin()) {Serial.println("ADC couldn't be initialized");}
 	adc.setGain(GAIN_TWOTHIRDS);
 

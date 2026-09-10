@@ -17,6 +17,13 @@ int AVERAGE_ITEMS = 1;			// Number of samples for average measurement of photodi
 
 adsGain_t ADC_GAIN_OPTION[6] = {GAIN_TWOTHIRDS, GAIN_ONE, GAIN_TWO, GAIN_FOUR, GAIN_EIGHT, GAIN_SIXTEEN};
 
+// GAIN_TWOTHIRDS 	±6.144 V
+// GAIN_ONE 		±4.096 V
+// GAIN_TWO 		±2.048 V
+// GAIN_FOUR 		±1.024 V
+// GAIN_EIGHT 		±0.512 V
+// GAIN_SIXTEEN 	±0.256 V
+
 float MAX_MOTOR_SPEED = 31000; 		// 32 - 6400
 // float MAX_MOTOR_SPEED = 14500; 	// 16 - 3200
 // float MAX_MOTOR_SPEED = 7500; 	// 8 - 1600
