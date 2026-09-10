@@ -14,7 +14,7 @@ String commands[10];
 Adafruit_ADS1115 adc;
 AccelStepper stepper(AccelStepper::DRIVER, PUL_PIN, DIR_PIN);
 
-bool is_moving, is_accelerated;
+bool is_moving, is_accelerated, switch_pressed;
 float move_from, move_to, measure_separation, motor_speed, stabilization_time;
 adsGain_t adc_gain;
 
@@ -38,7 +38,7 @@ void setup() {
 	if (!adc.begin()) {Serial.println("ADC couldn't be initialized");}
 	adc.setGain(GAIN_TWOTHIRDS);
 
-	if (!DEBUG) go_to_start(LS_START_PIN, MAX_MOTOR_SPEED, stepper);
+	go_to_start(stepper, is_moving);
 }
 
 void loop() {
@@ -46,12 +46,16 @@ void loop() {
 	if (Serial.available()) {read_incoming_data(incoming_data, commands);}
 
 	if (commands[0] == "execute") {
-		if (stepper.currentPosition() != 0) { go_to_start(LS_START_PIN, MAX_MOTOR_SPEED, stepper); delay(1000);}
+		if (stepper.currentPosition() != 0) {
+			go_to_start(stepper, is_moving);
+			delay(1000);
+		}
+
 		is_moving = true;
 
 		move_from = commands[1].toFloat();											// Receives start position in steps
 		move_to = commands[2].toFloat();											// Receives final position in steps
-		motor_speed = commands[3].toFloat() * MAX_MOTOR_SPEED * 0.01 * 0.15;		// Receives an int[1, 100]
+		motor_speed = commands[3].toFloat() * MAX_MOTOR_SPEED * 0.01;				// Receives an int[1, 100]
 		measure_separation = commands[4].toFloat();									// Receives the separation where measures will be taken in steps
 		stabilization_time = commands[5].toFloat();									// Receives an int
 		is_accelerated = (bool)commands[6].toInt();									// Receives an int[0, 1]
@@ -67,8 +71,8 @@ void loop() {
 		Serial.println("Stopped");
 	}
 
-	else if (commands[0] == "go_to_start") go_to_start(LS_START_PIN, MAX_MOTOR_SPEED, stepper);
-	else if (commands[0] == "go_to_end") go_to_end(LS_END_PIN, MAX_MOTOR_SPEED, stepper);
+	else if (commands[0] == "go_to_start") go_to_start(stepper, is_moving);
+	else if (commands[0] == "go_to_end") go_to_end(stepper, is_moving);
 	else if (commands[0] == "stop") stepper.stop();
 
 	if (is_moving) {
@@ -81,7 +85,8 @@ void loop() {
 			
 			if (stabilization_time != 0) delay(stabilization_time);
 
-			if (!DEBUG) {
+			if (ADC_DEBUG) print_adc_debug(adc);
+			else {
 
 				pd_value = 0.0;
 				pd2_value = 0.0;
@@ -96,17 +101,26 @@ void loop() {
 
 				print_data(pd_value, pd2_value, stepper);
 
-			} else if (ADC_DEBUG) print_adc_debug(adc);
-			else print_data(10000, 25000, stepper);
+			}
 
 			move_from = stepper.currentPosition() + measure_separation;
 		}
+		
+		if (stepper.currentPosition() >= move_to) {
+			stepper.stop();
+			is_moving = false;
+		}
 	}
 
-	if (stepper.currentPosition() >= move_to || digitalRead(LS_START_PIN) || digitalRead(LS_END_PIN)) {
+	if (!switch_pressed)
+		if (digitalRead(LS_START_PIN) || digitalRead(LS_END_PIN)) {
+			switch_pressed = true;
+		}
+
+	else {
 		stepper.stop();
-		delay(stabilization_time);
 		is_moving = false;
+		switch_pressed = false;
 	}
 	
 	memset(incoming_data, '\0', sizeof(incoming_data));

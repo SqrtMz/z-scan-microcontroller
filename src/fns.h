@@ -3,8 +3,8 @@
 #include <Arduino.h>
 #include <Adafruit_ADS1X15.h>
 
-bool DEBUG = false;				// Changes the behaviour whether using the setup or just software debugging is needed
-bool ADC_DEBUG = false;			// Enable printing information about the ADC pins
+bool NO_SETUP_DEBUG = false;				// Changes the behaviour whether using the setup or just software debugging is needed
+bool ADC_DEBUG = false;						// Enable printing information about the ADC pins
 
 int ENA_PIN = 16;				// Enable pin
 int DIR_PIN = 17;				// Direction pin
@@ -67,12 +67,13 @@ void print_data(float photo_diode_value1, float photo_diode_value2, AccelStepper
 	Serial.println(stepper.currentPosition());
 }
 
-void go_to_start(int& lim_switch_start_pin, float& max_motor_speed, AccelStepper& stepper) {
+void go_to_start(AccelStepper& stepper, bool& switch_pressed) {
 
-	if (!DEBUG) {
-		while (!digitalRead(lim_switch_start_pin)) {
-			stepper.move(-100000);
-			stepper.setSpeed(-max_motor_speed);
+	if (!NO_SETUP_DEBUG) {
+		
+		while (!digitalRead(LS_START_PIN) && !digitalRead(LS_END_PIN)) {
+			stepper.setSpeed(-MAX_MOTOR_SPEED);
+			stepper.moveTo(stepper.currentPosition() - 100000);
 			stepper.run();
 		}
 	}
@@ -81,12 +82,13 @@ void go_to_start(int& lim_switch_start_pin, float& max_motor_speed, AccelStepper
 	stepper.setCurrentPosition(0);
 }
 
-void go_to_end(int& lim_switch_end_pin, float& max_motor_speed, AccelStepper& stepper) {
+void go_to_end(AccelStepper& stepper, bool& switch_pressed) {
 
-	if (!DEBUG) {
-		while (!digitalRead(lim_switch_end_pin)) {
-			stepper.move(100000);
-			stepper.setSpeed(max_motor_speed);
+	if (!NO_SETUP_DEBUG) {
+
+		while (!digitalRead(LS_START_PIN) && !digitalRead(LS_END_PIN)) {
+			stepper.setSpeed(MAX_MOTOR_SPEED);
+			stepper.moveTo(stepper.currentPosition() + 100000);
 			stepper.run();
 		}
 	
