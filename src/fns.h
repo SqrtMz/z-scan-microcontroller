@@ -33,6 +33,11 @@ float MAX_MOTOR_SPEED = 31000; 		// 32 - 6400
 
 // float MAX_MOTOR_SPEED[5] = {1850, 4500, 7500, 14500, 31000};
 
+enum SystemState {
+	IDLE,
+	RUNNING,
+};
+
 void read_incoming_data(char *incoming_data, String *commands) {
 
 	int i = 0;
@@ -67,29 +72,54 @@ void print_data(float photo_diode_value1, float photo_diode_value2, AccelStepper
 	Serial.println(stepper.currentPosition());
 }
 
-void go_to_start(AccelStepper& stepper, bool& switch_pressed) {
-
+void go_to_start(AccelStepper& stepper) {
 	if (!NO_SETUP_DEBUG) {
-		
-		while (!digitalRead(LS_START_PIN) && !digitalRead(LS_END_PIN)) {
+
+		bool start_was_pressed = digitalRead(LS_START_PIN);
+		bool end_was_pressed = digitalRead(LS_END_PIN);
+
+		while (true) {
 			stepper.setSpeed(-MAX_MOTOR_SPEED);
-			stepper.moveTo(stepper.currentPosition() - 100000);
+			stepper.moveTo(-100000);
 			stepper.run();
+
+			bool start_pressed = digitalRead(LS_START_PIN);
+			bool end_pressed = digitalRead(LS_END_PIN);
+
+			bool new_press = (!start_was_pressed && start_pressed) || (!end_was_pressed && end_pressed);
+
+			if (new_press) break;
+
+			start_was_pressed = start_pressed;
+			end_was_pressed = end_pressed;
 		}
+
+		stepper.stop();
 	}
 
-	stepper.stop();
 	stepper.setCurrentPosition(0);
 }
 
-void go_to_end(AccelStepper& stepper, bool& switch_pressed) {
-
+void go_to_end(AccelStepper& stepper) {
 	if (!NO_SETUP_DEBUG) {
 
-		while (!digitalRead(LS_START_PIN) && !digitalRead(LS_END_PIN)) {
+		bool start_was_pressed = digitalRead(LS_START_PIN);
+		bool end_was_pressed = digitalRead(LS_END_PIN);
+
+		while (true) {
 			stepper.setSpeed(MAX_MOTOR_SPEED);
-			stepper.moveTo(stepper.currentPosition() + 100000);
+			stepper.moveTo(100000);
 			stepper.run();
+
+			bool start_pressed = digitalRead(LS_START_PIN);
+			bool end_pressed = digitalRead(LS_END_PIN);
+
+			bool new_press = (!start_was_pressed && start_pressed) || (!end_was_pressed && end_pressed);
+
+			if (new_press) break;
+
+			start_was_pressed = start_pressed;
+			end_was_pressed = end_pressed;
 		}
 	
 		stepper.stop();

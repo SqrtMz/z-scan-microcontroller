@@ -14,7 +14,8 @@ String commands[10];
 Adafruit_ADS1115 adc;
 AccelStepper stepper(AccelStepper::DRIVER, PUL_PIN, DIR_PIN);
 
-bool is_moving, is_accelerated, switch_pressed;
+SystemState system_state = IDLE;
+bool is_accelerated, switch_pressed;
 float move_from, move_to, measure_separation, motor_speed, stabilization_time;
 adsGain_t adc_gain;
 
@@ -38,20 +39,20 @@ void setup() {
 	if (!adc.begin()) {Serial.println("ADC couldn't be initialized");}
 	adc.setGain(GAIN_TWOTHIRDS);
 
-	go_to_start(stepper, is_moving);
+	go_to_start(stepper);
 }
 
 void loop() {
 
-	if (Serial.available()) {read_incoming_data(incoming_data, commands);}
+	if (Serial.available()) read_incoming_data(incoming_data, commands);
 
 	if (commands[0] == "execute") {
 		if (stepper.currentPosition() != 0) {
-			go_to_start(stepper, is_moving);
-			delay(1000);
+			go_to_start(stepper);
+			delay(100);
 		}
 
-		is_moving = true;
+		system_state = RUNNING;
 
 		move_from = commands[1].toFloat();											// Receives start position in steps
 		move_to = commands[2].toFloat();											// Receives final position in steps
@@ -66,61 +67,63 @@ void loop() {
 
 	else if (commands[0] == "stop") {
 		stepper.stop();
-		is_moving = false;
+		system_state = IDLE;
 
-		Serial.println("Stopped");
+		Serial.println("STOPPED");
 	}
 
-	else if (commands[0] == "go_to_start") go_to_start(stepper, is_moving);
-	else if (commands[0] == "go_to_end") go_to_end(stepper, is_moving);
-	else if (commands[0] == "stop") stepper.stop();
+	else if (commands[0] == "go_to_start") go_to_start(stepper);
+	else if (commands[0] == "go_to_end") go_to_end(stepper);
 
-	if (is_moving) {
+	switch (system_state) {
+		case RUNNING:
+			stepper.moveTo(move_from);
+			if (!is_accelerated && stepper.currentPosition() != 0) stepper.setSpeed(motor_speed);
+			stepper.run();
 
-		stepper.moveTo(move_from);
-		if (!is_accelerated && stepper.currentPosition() != 0) stepper.setSpeed(motor_speed);
-		stepper.run();
+			if (stepper.currentPosition() == move_from) {
+				
+				if (stabilization_time != 0) delay(stabilization_time);
 
-		if (stepper.currentPosition() == move_from) {
-			
-			if (stabilization_time != 0) delay(stabilization_time);
+				if (ADC_DEBUG) print_adc_debug(adc);
+				else {
 
-			if (ADC_DEBUG) print_adc_debug(adc);
-			else {
+					pd_value = 0.0;
+					pd2_value = 0.0;
 
-				pd_value = 0.0;
-				pd2_value = 0.0;
+					for (size_t i = 0; i < AVERAGE_ITEMS; i++) {
+						pd_value += adc.readADC_Differential_1_3();
+						pd2_value += adc.readADC_Differential_2_3();
+					}
 
-				for (size_t i = 0; i < AVERAGE_ITEMS; i++) {
-					pd_value += adc.readADC_Differential_1_3();
-					pd2_value += adc.readADC_Differential_2_3();
+					pd_value /= AVERAGE_ITEMS;
+					pd2_value /= AVERAGE_ITEMS;
+
+					print_data(pd_value, pd2_value, stepper);
+
 				}
 
-				pd_value /= AVERAGE_ITEMS;
-				pd2_value /= AVERAGE_ITEMS;
-
-				print_data(pd_value, pd2_value, stepper);
-
+				move_from = stepper.currentPosition() + measure_separation;
+			}
+			
+			if (stepper.currentPosition() >= move_to) {
+				stepper.stop();
+				system_state = IDLE;
 			}
 
-			move_from = stepper.currentPosition() + measure_separation;
-		}
-		
-		if (stepper.currentPosition() >= move_to) {
-			stepper.stop();
-			is_moving = false;
-		}
-	}
+			if (!switch_pressed) 
+				if (digitalRead(LS_START_PIN) || digitalRead(LS_END_PIN)) switch_pressed = true;
+			else {
+				stepper.stop();
+				system_state = IDLE;
+				switch_pressed = false;
+			}
+			
+			break;
 
-	if (!switch_pressed)
-		if (digitalRead(LS_START_PIN) || digitalRead(LS_END_PIN)) {
-			switch_pressed = true;
-		}
-
-	else {
-		stepper.stop();
-		is_moving = false;
-		switch_pressed = false;
+		case IDLE:
+		default:
+			break;
 	}
 	
 	memset(incoming_data, '\0', sizeof(incoming_data));
