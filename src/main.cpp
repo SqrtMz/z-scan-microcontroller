@@ -15,7 +15,8 @@ Adafruit_ADS1115 adc;
 AccelStepper stepper(AccelStepper::DRIVER, PUL_PIN, DIR_PIN);
 
 SystemState system_state = IDLE;
-bool is_accelerated, switch_pressed;
+bool is_accelerated = false;
+bool switch_pressed = false;
 float move_from, move_to, measure_separation, motor_speed, stabilization_time;
 adsGain_t adc_gain;
 
@@ -56,7 +57,7 @@ void loop() {
 
 		move_from = commands[1].toFloat();											// Receives start position in steps
 		move_to = commands[2].toFloat();											// Receives final position in steps
-		motor_speed = commands[3].toFloat() * MAX_MOTOR_SPEED * 0.01;				// Receives an int[1, 100]
+		motor_speed = commands[3].toFloat() * MAX_MOTOR_SPEED * 0.01 * 0.15;		// Receives an int[1, 100]
 		measure_separation = commands[4].toFloat();									// Receives the separation where measures will be taken in steps
 		stabilization_time = commands[5].toFloat();									// Receives an int
 		is_accelerated = (bool)commands[6].toInt();									// Receives an int[0, 1]
@@ -111,7 +112,7 @@ void loop() {
 				system_state = IDLE;
 			}
 
-			if (!switch_pressed) 
+			if (!switch_pressed)
 				if (digitalRead(LS_START_PIN) || digitalRead(LS_END_PIN)) switch_pressed = true;
 			else {
 				stepper.stop();
