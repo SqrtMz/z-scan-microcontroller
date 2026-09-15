@@ -50,18 +50,19 @@ void loop() {
 	if (commands[0] == "execute") {
 		if (stepper.currentPosition() != 0) {
 			go_to_start(stepper);
-			delay(100);
+			delay(1000);
 		}
 
 		system_state = RUNNING;
 
 		move_from = commands[1].toFloat();											// Receives start position in steps
 		move_to = commands[2].toFloat();											// Receives final position in steps
-		motor_speed = commands[3].toFloat() * MAX_MOTOR_SPEED * 0.01 * 0.15;		// Receives an int[1, 100]
+		motor_speed = commands[3].toFloat() * MAX_MOTOR_SPEED * 0.01;				// Receives an int[1, 100]
 		measure_separation = commands[4].toFloat();									// Receives the separation where measures will be taken in steps
 		stabilization_time = commands[5].toFloat();									// Receives an int
 		is_accelerated = (bool)commands[6].toInt();									// Receives an int[0, 1]
 		adc_gain = ADC_GAIN_OPTION[commands[7].toInt()];							// Receives an index for ADC_GAIN_OPTIONS[]
+		average_items = commands[8].toInt();
 
 		adc.setGain(adc_gain);
 	}
@@ -91,14 +92,13 @@ void loop() {
 
 					pd_value = 0.0;
 					pd2_value = 0.0;
-
-					for (size_t i = 0; i < AVERAGE_ITEMS; i++) {
+					for (size_t i = 0; i < average_items; i++) {
 						pd_value += adc.readADC_Differential_1_3();
 						pd2_value += adc.readADC_Differential_2_3();
 					}
 
-					pd_value /= AVERAGE_ITEMS;
-					pd2_value /= AVERAGE_ITEMS;
+					pd_value /= average_items;
+					pd2_value /= average_items;
 
 					print_data(pd_value, pd2_value, stepper);
 

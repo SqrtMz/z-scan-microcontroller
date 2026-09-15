@@ -13,7 +13,7 @@ int PUL_PIN = 5;				// Pulse pin
 int LS_START_PIN = 18;			// Limit switch start pin
 int LS_END_PIN = 19;			// Limit switch end pin
 
-int AVERAGE_ITEMS = 1;			// Number of samples for average measurement of photodiodes
+int average_items = 1;			// Number of samples for average measurement of photodiodes
 
 adsGain_t ADC_GAIN_OPTION[6] = {GAIN_TWOTHIRDS, GAIN_ONE, GAIN_TWO, GAIN_FOUR, GAIN_EIGHT, GAIN_SIXTEEN};
 
@@ -24,8 +24,8 @@ adsGain_t ADC_GAIN_OPTION[6] = {GAIN_TWOTHIRDS, GAIN_ONE, GAIN_TWO, GAIN_FOUR, G
 // GAIN_EIGHT 		±0.512 V
 // GAIN_SIXTEEN 	±0.256 V
 
-float MAX_MOTOR_SPEED = 31000; 		// 32 - 6400
-// float MAX_MOTOR_SPEED = 14500; 	// 16 - 3200
+// float MAX_MOTOR_SPEED = 31000; 		// 32 - 6400
+float MAX_MOTOR_SPEED = 14500; 	// 16 - 3200
 // float MAX_MOTOR_SPEED = 7500; 	// 8 - 1600
 
 // float MAX_MOTOR_SPEED = 4500; 	// 4 - 800
