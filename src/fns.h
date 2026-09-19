@@ -25,7 +25,7 @@ adsGain_t ADC_GAIN_OPTION[6] = {GAIN_TWOTHIRDS, GAIN_ONE, GAIN_TWO, GAIN_FOUR, G
 // GAIN_EIGHT 		±0.512 V
 // GAIN_SIXTEEN 	±0.256 V
 
-int max_motor_speed = 1000;
+int max_motor_speed = 5000;
 
 // int MAX_MOTOR_SPEED = 31000; 	// 32 - 6400
 // int MAX_MOTOR_SPEED = 15000; 	// 16 - 3200

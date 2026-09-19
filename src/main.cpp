@@ -50,6 +50,8 @@ void setup() {
 
 	if (!adc.begin()) {Serial.println("ADC couldn't be initialized");}
 	adc.setGain(GAIN_TWOTHIRDS);
+
+	go_to_start(stepper);
 }
 
 void loop() {
