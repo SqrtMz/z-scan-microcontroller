@@ -74,29 +74,30 @@ void print_data(float photo_diode_value1, float photo_diode_value2, AccelStepper
 }
 
 void go_to_start(AccelStepper& stepper) {
-
 	if (!NO_SETUP_DEBUG) {
+		stepper.setSpeed(0);
 		while (!digitalRead(LS_START_PIN)) {
 			stepper.move(-100000);
-			stepper.setSpeed(-max_motor_speed);
 			stepper.run();
 		}
+		stepper.stop();
+		stepper.setSpeed(0);
+		stepper.moveTo(stepper.currentPosition());
 	}
 
-	stepper.stop();
 	stepper.setCurrentPosition(0);
 }
 
 void go_to_end(AccelStepper& stepper) {
-
 	if (!NO_SETUP_DEBUG) {
+		stepper.setSpeed(0);
 		while (!digitalRead(LS_END_PIN)) {
 			stepper.move(100000);
-			stepper.setSpeed(max_motor_speed);
 			stepper.run();
 		}
-
 		stepper.stop();
+		stepper.setSpeed(0);
+		stepper.moveTo(stepper.currentPosition());
 	}
 }
 

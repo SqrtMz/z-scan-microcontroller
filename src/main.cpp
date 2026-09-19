@@ -23,6 +23,8 @@ int average_items = 1;						// Number of samples for average measurement of phot
 
 SystemState system_state = IDLE;
 
+bool being_pressed = false;
+
 void setup() {
 
 	Serial.begin(115200);
@@ -119,7 +121,7 @@ void loop() {
 				move_from = stepper.currentPosition() + measure_separation;
 			}
 
-			if (stepper.currentPosition() >= move_to || digitalRead(LS_START_PIN) || digitalRead(LS_END_PIN)) {
+			if (stepper.currentPosition() >= move_to || digitalRead(LS_END_PIN)) {
 				stepper.stop();
 				delay(stabilization_time);
 				system_state = IDLE;
